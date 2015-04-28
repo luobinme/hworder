@@ -13,17 +13,37 @@ try {
 			)
 		)->register();
 
-		 $di = new Phalcon\DI\FactoryDefault();  //创建 DI
+		$di = new Phalcon\DI\FactoryDefault();  //创建 DI
+
+	/*
+	  
+		//Start the session the first time when some component request the session service
+		$di->set('session', function(){
+			$session = new Phalcon\Session\Adapter\Files();
+			$session->start();
+			return $session;
+		});
+*/
+		// Database connection is created based in the parameters defined in the configuration file
+		$di->set('db', function() use ($config) {
+			return new \Phalcon\Db\Adapter\Pdo\Mysql(array(
+				'host' => $config->database->host,
+				'username' => $config->database->username,
+				'password' => $config->database->password,
+				'dbname' => $config->database->name,
+				'charset' => 'utf8' //数据库编码
+			));
+		});
+
 		 //设置视图目录
 		$di->set('view', function(){
 			 $view = new \Phalcon\Mvc\View();
 			 $view->setViewsDir('../app/views/');
 			 return $view;
 		});
-			
+
 		$application = new \Phalcon\Mvc\Application();
 		$application->setDI($di);
 		echo $application->handle()->getContent();
-} catch(\Phalcon\Exception $e) {
-     echo 'Error: ', $e->getMessage();
-}
+} catch(\Phalcon\Exception $e) {echo 'Error: ', $e->getMessage();}
+
